@@ -160,3 +160,6 @@ peacock_*.e
 
 # Revision files
 include/*Revision.h
+
+#license header
+./lic
