@@ -3,6 +3,10 @@
 #include "AppFactory.h"
 #include "ModulesApp.h"
 
+#include "VectorPotentialA.h"
+#include "VectorPotentialAJ0.h"
+#include "VectorPotentialABBC.h"
+
 template<>
 InputParameters validParams<RedwingApp>()
 {
@@ -44,6 +48,9 @@ extern "C" void RedwingApp__registerObjects(Factory & factory) { RedwingApp::reg
 void
 RedwingApp::registerObjects(Factory & factory)
 {
+  registerKernel(VectorPotentialA);
+  registerKernel(VectorPotentialAJ0);
+  registerBoundaryCondition(VectorPotentialABBC);
 }
 
 // External entry point for dynamic syntax association

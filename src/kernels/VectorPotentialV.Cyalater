@@ -1,0 +1,59 @@
+/* -------------------------------------------------------------------------------
+    redwing - a finite element solver for electromagnetic problems
+    Copyright (C) 2015 Adam Lange
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+----------------------------------------------------------------------------- */
+
+#include "VectorPotentialV.h"
+
+template<>
+InputParameters validParams<VectorPotentialV>()
+{
+  InputParameters params = validParams<Kernel>();
+  params.addRequiredParam<unsigned>("component","component");
+  params.addRequiredCoupledVar("scalar_potential","scalar potential");
+  return params;
+}
+
+VectorPotentialV::VectorPotentialV(const InputParameters &parameters) :
+  Kernel(parameters),
+  _component(getParameter<unsigned>("component")),
+  _sigma(getMaterialPropertyByName<Real>("sigma")),
+  _grad_v(coupledGradient("scalar_potential")),
+  _v_var(coupled("scalar_potential"))
+{
+}
+
+Real
+VectorPotentialV::computeQpResidual()
+{
+  return _test[_i][_qp] * _sigma[_qp] * _grad_v[_qp](_component);
+}
+
+Real
+VectorPotentialV::computeQpJacobian()
+{
+  return 0;
+}
+
+Real
+VectorPotentialV::computeQpOffDiagJacobian(unsigned jvar)
+{
+  if (jvar == _v_var)
+  {
+    return _test[_i][_qp]*_sigma[_qp]*_grad_psi[_j][_qp](_component);
+  }
+}
