@@ -6,6 +6,8 @@
 #include "VectorPotentialA.h"
 #include "VectorPotentialAJ0.h"
 #include "VectorPotentialABBC.h"
+#include "MuMaterial.h"
+#include "VectorPotentialABC.h"
 
 template<>
 InputParameters validParams<RedwingApp>()
@@ -51,6 +53,8 @@ RedwingApp::registerObjects(Factory & factory)
   registerKernel(VectorPotentialA);
   registerKernel(VectorPotentialAJ0);
   registerBoundaryCondition(VectorPotentialABBC);
+  registerMaterial(MuMaterial);
+  registerBoundaryCondition(VectorPotentialABC);
 }
 
 // External entry point for dynamic syntax association

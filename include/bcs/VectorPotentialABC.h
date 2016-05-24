@@ -17,31 +17,25 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 ----------------------------------------------------------------------------- */
 
-#include "VectorPotentialA.h"
+#ifndef VECTORPOTENTIALABC_H
+#define VECTORPOTENTIALABC_H
+
+#include "IntegratedBC.h"
+
+class VectorPotentialABC;
 
 template<>
-InputParameters validParams<VectorPotentialA>()
-{
-  InputParameters params = validParams<Kernel>();
-  params.addRequiredParam<unsigned>("component","component");
-  return params;
-}
+InputParameters validParams<VectorPotentialABC>();
 
-VectorPotentialA::VectorPotentialA(const InputParameters &parameters):
-  Kernel(parameters),
-  //_component(getParameter<unsigned>("component")),
-  _mu(getMaterialPropertyByName<Real>("mu"))
+class VectorPotentialABC : public IntegratedBC
 {
-}
+public:
+  VectorPotentialABC(const InputParameters & parameters);
 
-Real
-VectorPotentialA::computeQpResidual()
-{
-  return -_grad_test[_i][_qp] * _grad_u[_qp] / _mu[_qp];
-}
+protected:
+  Real computeQpResidual();
+  Real computeQpJacobian();
+  const MaterialProperty<Real> & _mu;
 
-Real
-VectorPotentialA::computeQpJacobian()
-{
-  return -_grad_test[_i][_qp] * _grad_phi[_j][_qp] / _mu[_qp];
-}
+};
+#endif //VECTORPOTENTIALABC_H

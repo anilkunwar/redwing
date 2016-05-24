@@ -17,31 +17,37 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 ----------------------------------------------------------------------------- */
 
-#include "VectorPotentialA.h"
+#include "MuMaterial.h"
 
 template<>
-InputParameters validParams<VectorPotentialA>()
+InputParameters validParams<MuMaterial>()
 {
-  InputParameters params = validParams<Kernel>();
-  params.addRequiredParam<unsigned>("component","component");
+  InputParameters params = validParams<Material>();
+  params.addRequiredParam<Real>("mu","magnetic magnetic permeability");
+  params.addRequiredCoupledVar("Ax","Magnetic vector potential x component");
+  params.addRequiredCoupledVar("Ay","Magnetic vector potential y component");
+  params.addRequiredCoupledVar("Az","Magnetic vector potential z component");
   return params;
 }
 
-VectorPotentialA::VectorPotentialA(const InputParameters &parameters):
-  Kernel(parameters),
-  //_component(getParameter<unsigned>("component")),
-  _mu(getMaterialPropertyByName<Real>("mu"))
+MuMaterial::MuMaterial(const InputParameters & parameters) :
+  Material(parameters),
+  _mu_param(getParam<Real>("mu")),
+  _mu(declareProperty<Real>("mu")),
+  _B(declareProperty<RealVectorValue>("B")),
+  _grad_ax(coupledGradient("Ax")),
+  _grad_ay(coupledGradient("Ay")),
+  _grad_az(coupledGradient("Az"))
 {
 }
 
-Real
-VectorPotentialA::computeQpResidual()
+void
+MuMaterial::computeQpProperties()
 {
-  return -_grad_test[_i][_qp] * _grad_u[_qp] / _mu[_qp];
-}
+  _mu[_qp] = _mu_param;
+  //_B[_qp] = RealVectorValue(1,1,1);
+  _B[_qp](0) = ( _grad_az[_qp](1) - _grad_ay[_qp](2) );
+  _B[_qp](1) = ( _grad_ax[_qp](2) - _grad_az[_qp](0) );
+  _B[_qp](2) = ( _grad_ay[_qp](0) - _grad_ax[_qp](1) );
 
-Real
-VectorPotentialA::computeQpJacobian()
-{
-  return -_grad_test[_i][_qp] * _grad_phi[_j][_qp] / _mu[_qp];
 }

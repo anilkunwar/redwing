@@ -17,31 +17,29 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 ----------------------------------------------------------------------------- */
 
-#include "VectorPotentialA.h"
+#include "VectorPotentialABC.h"
 
 template<>
-InputParameters validParams<VectorPotentialA>()
+InputParameters validParams<VectorPotentialABC>()
 {
-  InputParameters params = validParams<Kernel>();
-  params.addRequiredParam<unsigned>("component","component");
+  InputParameters params = validParams<IntegratedBC>();
   return params;
-}
+};
 
-VectorPotentialA::VectorPotentialA(const InputParameters &parameters):
-  Kernel(parameters),
-  //_component(getParameter<unsigned>("component")),
-  _mu(getMaterialPropertyByName<Real>("mu"))
+VectorPotentialABC::VectorPotentialABC(const InputParameters & parameters) :
+  IntegratedBC(parameters),
+  _mu(getMaterialProperty<Real>("mu"))
 {
 }
 
 Real
-VectorPotentialA::computeQpResidual()
+VectorPotentialABC::computeQpResidual()
 {
-  return -_grad_test[_i][_qp] * _grad_u[_qp] / _mu[_qp];
+  return _test[_i][_qp]*1/_mu[_qp]*_grad_u[_qp]*_normals[_qp];
 }
 
 Real
-VectorPotentialA::computeQpJacobian()
+VectorPotentialABC::computeQpJacobian()
 {
-  return -_grad_test[_i][_qp] * _grad_phi[_j][_qp] / _mu[_qp];
+  return _test[_i][_qp]*1/_mu[_qp]*_grad_phi[_j][_qp]*_normals[_qp];
 }

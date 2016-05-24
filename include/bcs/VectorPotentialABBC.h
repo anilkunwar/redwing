@@ -47,6 +47,8 @@ VariableGradient & _grad_ay;
 VariableGradient & _grad_az;
 
 Real _b;
+unsigned _component;
+Real _k;
 };
 
 #endif //VECTORPOTENTIALABBC_H

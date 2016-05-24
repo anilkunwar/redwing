@@ -3,8 +3,7 @@
     Copyright (C) 2015 Adam Lange
 
     This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License as published by the Free Software Foundation; either
+    modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation; either
     version 2.1 of the License, or (at your option) any later version.
 
     This library is distributed in the hope that it will be useful,
@@ -25,8 +24,10 @@ InputParameters validParams<VectorPotentialABBC>()
   InputParameters params = validParams<IntegratedBC>();
   params.addRequiredParam<Real>("b","outward boundary flux density");
   params.addRequiredCoupledVar("Ax","Magnetic vector potential x component");
-  params.addRequiredCoupledVar("Ay","Magnetic vector potential y componetnt");
-  params.addRequiredCoupledVar("Az","Magnetic vector potential z componetnt");
+  params.addRequiredCoupledVar("Ay","Magnetic vector potential y component");
+  params.addRequiredCoupledVar("Az","Magnetic vector potential z component");
+  params.addRequiredParam<unsigned>("component","component");
+  params.addParam<Real>("k",1,"weighting factor");
   return params;
 }
 
@@ -38,14 +39,16 @@ VectorPotentialABBC::VectorPotentialABBC(const InputParameters & parameters) :
   _grad_ax(coupledGradient("Ax")),
   _grad_ay(coupledGradient("Ay")),
   _grad_az(coupledGradient("Az")),
-  _b(getParam<Real>("b"))
+  _b(getParam<Real>("b")),
+  _component(getParam<unsigned>("component")),
+  _k(getParam<Real>("k"))
 {
 }
 
 Real
 VectorPotentialABBC::computeQpResidual()
 {
-  return _test[_i][_qp] * ( - _b + 
+  return _k*_test[_i][_qp] * ( - _b + 
      ( _grad_az[_qp](1) - _grad_ay[_qp](2) ) * _normals[_qp](0)
     +( _grad_ax[_qp](2) - _grad_az[_qp](0) ) * _normals[_qp](1)
     +( _grad_ay[_qp](0) - _grad_ax[_qp](1) ) * _normals[_qp](2)
@@ -55,7 +58,27 @@ VectorPotentialABBC::computeQpResidual()
 Real
 VectorPotentialABBC::computeQpJacobian()
 {
-  return computeQpOffDiagJacobian(_j);
+  if ( _component == 0 )
+  {
+    return _k*_test[_i][_qp] * (
+      _grad_phi[_j][_qp](2) * _normals[_qp](1)
+    - _grad_phi[_j][_qp](1) * _normals[_qp](2)
+    );
+  }
+  else if ( _component == 1 )
+  {
+    return _k*_test[_i][_qp] * (
+      -_grad_phi[_j][_qp](2) * _normals[_qp](0)
+      +_grad_phi[_j][_qp](0) * _normals[_qp](2)
+    );
+  }
+  else //if ( _component == 2 )
+  {
+    return _k*_test[_i][_qp] * (
+      _grad_phi[_j][_qp](1) * _normals[_qp](0)
+     -_grad_phi[_j][_qp](0) * _normals[_qp](1)
+    );
+  }
 }
 
 Real
@@ -63,27 +86,28 @@ VectorPotentialABBC::computeQpOffDiagJacobian(unsigned jvar)
 {
   if ( jvar == _ax_var )
   {
-    return _test[_i][_qp] * (
-      _grad_phi[jvar][_qp](2) * _normals[_qp](1)
-    - _grad_phi[jvar][_qp](1) * _normals[_qp](2)
+    return _k*_test[_i][_qp] * (
+      _grad_phi[_j][_qp](2) * _normals[_qp](1)
+    - _grad_phi[_j][_qp](1) * _normals[_qp](2)
     );
   }
   else if ( jvar == _ay_var )
   {
-    return _test[_i][_qp] * (
-      -_grad_phi[jvar][_qp](2) * _normals[_qp](0)
-      +_grad_phi[jvar][_qp](0) * _normals[_qp](2)
+    return _k*_test[_i][_qp] * (
+      -_grad_phi[_j][_qp](2) * _normals[_qp](0)
+      +_grad_phi[_j][_qp](0) * _normals[_qp](2)
     );
   }
-  else //if ( jvar == _az_var )
+  else if ( jvar == _az_var )
   {
-    return _test[_i][_qp] * (
-      _grad_phi[jvar][_qp](1) * _normals[_qp](0)
-     -_grad_phi[jvar][_qp](0) * _normals[_qp](1)
+    return _k*_test[_i][_qp] * (
+      _grad_phi[_j][_qp](1) * _normals[_qp](0)
+     -_grad_phi[_j][_qp](0) * _normals[_qp](1)
     );
   }
-  //else
-  //{
-  //raise
-  //}
+  else
+  {
+    std::cout<<"Shit"<<std::endl;
+    return 0;
+  }
 }

@@ -17,31 +17,31 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 ----------------------------------------------------------------------------- */
 
-#include "VectorPotentialA.h"
+#ifndef MUMATERIAL_H
+#define MUMATERIAL_H
+
+#include "Material.h"
+
+class MuMaterial;
 
 template<>
-InputParameters validParams<VectorPotentialA>()
-{
-  InputParameters params = validParams<Kernel>();
-  params.addRequiredParam<unsigned>("component","component");
-  return params;
-}
+InputParameters validParams<MuMaterial>();
 
-VectorPotentialA::VectorPotentialA(const InputParameters &parameters):
-  Kernel(parameters),
-  //_component(getParameter<unsigned>("component")),
-  _mu(getMaterialPropertyByName<Real>("mu"))
+class MuMaterial : public Material
 {
-}
+public:
+  MuMaterial(const InputParameters & parameters);
 
-Real
-VectorPotentialA::computeQpResidual()
-{
-  return -_grad_test[_i][_qp] * _grad_u[_qp] / _mu[_qp];
-}
+protected:
+  virtual void computeQpProperties();
 
-Real
-VectorPotentialA::computeQpJacobian()
-{
-  return -_grad_test[_i][_qp] * _grad_phi[_j][_qp] / _mu[_qp];
-}
+private:
+  Real _mu_param;
+  MaterialProperty<Real> & _mu;
+  MaterialProperty<RealVectorValue> & _B;
+  VariableGradient & _grad_ax;
+  VariableGradient & _grad_ay;
+  VariableGradient & _grad_az;
+};
+
+#endif // MUMATERIAL_H
